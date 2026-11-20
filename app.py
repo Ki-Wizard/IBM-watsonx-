@@ -57,15 +57,19 @@ def show_assessment(result: Result) -> None:
     with government:
         show_alert("정부 위기경보", result.government_alert)
 
-    st.markdown(f"**수온** · {result.water_temperature.status}")
     if result.follow_up_question:
         st.warning(result.follow_up_question)
 
     if result.evidence:
         st.subheader("공식 원문")
-        for source in result.evidence:
-            st.markdown(f"[{source.title}]({source.url}) · {source.publisher}")
-            st.write(source.summary)
+        links = st.columns(2) if len(result.evidence) > 1 else [st.container()]
+        for index, source in enumerate(result.evidence):
+            links[index % len(links)].markdown(f"[{source.title}]({source.url}) · {source.publisher}")
+    st.markdown(f"**수온** · {result.water_temperature.status}")
+    if result.evidence:
+        with st.expander("발표 요약"):
+            for source in result.evidence:
+                st.write(source.summary)
 
 
 def show_inbox(result: Result) -> None:
@@ -102,6 +106,10 @@ def main() -> None:
     st.html("""
         <style>
         [data-testid="stMainBlockContainer"] {padding-top:3.5rem}
+        [data-testid="stMainBlockContainer"] h1 {
+            font-size:clamp(2rem, 5vw, 3rem);
+            word-break:keep-all;
+        }
         [data-testid="stMarkdownContainer"] p, .gamak-draft {
             word-break:keep-all;
             overflow-wrap:anywhere;
