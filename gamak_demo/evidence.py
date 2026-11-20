@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
-from typing import Final, Generic
+from typing import Final, Generic, Literal
 
 from pydantic import AwareDatetime, ValidationError
 
@@ -27,7 +28,16 @@ GAMAK_NAMES: Final = frozenset({GAMAK, "여수 가막만", "전남 여수 가막
 
 class IssuedAlert(Contract, Generic[Level]):  # noqa: UP046 - shared with the IBM tool runtime
     value: Level
-    effective_at: AwareDatetime
+    effective_at: AwareDatetime | None
+
+
+PassageTopic = Literal["regional", "government", "water_background"]
+
+
+class Excerpt(Contract):
+    topic: PassageTopic
+    location: str
+    text: str
 
 
 class Announcement(Contract):
@@ -35,6 +45,7 @@ class Announcement(Contract):
     regions: tuple[str, ...]
     regional_alert: IssuedAlert[RegionLevel]
     government_alert: IssuedAlert[GovernmentLevel]
+    passages: tuple[Excerpt, ...] = ()
 
 
 class ApprovedNotice(Contract):
@@ -72,10 +83,50 @@ class UnresolvedReview:
     evidence: tuple[Evidence, ...] = ()
 
 
+def read_archive(archive_path: Path) -> Archive:
+    return Archive.model_validate_json(archive_path.read_bytes())
+
+
+def known_announcements(archive: Archive, request: Request) -> tuple[Announcement, ...]:
+    return tuple(
+        item for item in archive.documents
+        if GAMAK in item.regions and item.source.published_at <= request.as_of
+    )
+
+
+def find_approval(archive: Archive, request: Request) -> ApprovedNotice | None:
+    return next(
+        (notice for notice in archive.approved_notices
+         if notice.id == request.approved_notice_id and notice.region == GAMAK
+         and notice.approved_at <= request.as_of),
+        None,
+    )
+
+
+def current_announcements(
+    known: tuple[Announcement, ...], as_of: datetime,
+) -> tuple[Announcement | None, Announcement | None]:
+    regional = max(
+        (item for item in known
+         if (item.regional_alert.effective_at or item.source.published_at) <= as_of),
+        key=lambda item: (item.regional_alert.effective_at or item.source.published_at,
+                          item.source.published_at),
+        default=None,
+    )
+    government = max(
+        (item for item in known
+         if (item.government_alert.effective_at or item.source.published_at) <= as_of),
+        key=lambda item: (item.government_alert.effective_at or item.source.published_at,
+                          item.source.published_at),
+        default=None,
+    )
+    return regional, government
+
+
 def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedReview:
     """Resolve the approved notice and each alert independently at the requested time."""
     try:
-        archive = Archive.model_validate_json(archive_path.read_text(encoding="utf-8"))
+        archive = read_archive(archive_path)
     except (OSError, UnicodeError, ValidationError):
         return UnresolvedReview(
             "공식 발표 자료를 조회할 수 없습니다.",
@@ -88,33 +139,16 @@ def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedR
             "해제 또는 변경 범위를 확인할 해역의 공식 명칭을 알려 주시겠어요?",
         )
 
-    approved = next(
-        (notice for notice in archive.approved_notices
-         if notice.id == request.approved_notice_id and notice.region == GAMAK
-         and notice.approved_at <= request.as_of),
-        None,
-    )
+    approved = find_approval(archive, request)
     if approved is None:
         return UnresolvedReview(
             "기준시각에 유효한 직전 승인본을 찾지 못했습니다.",
             "이 해역의 직전 승인본 ID와 승인 시각을 확인해 주시겠어요?",
         )
 
-    known = tuple(
-        item for item in archive.documents
-        if GAMAK in item.regions and item.source.published_at <= request.as_of
-    )
+    known = known_announcements(archive, request)
     sources = {item.source.id: item.source for item in known}
-    region = max(
-        (item for item in known if item.regional_alert.effective_at <= request.as_of),
-        key=lambda item: (item.regional_alert.effective_at, item.source.published_at),
-        default=None,
-    )
-    government = max(
-        (item for item in known if item.government_alert.effective_at <= request.as_of),
-        key=lambda item: (item.government_alert.effective_at, item.source.published_at),
-        default=None,
-    )
+    region, government = current_announcements(known, request.as_of)
 
     if region is None or government is None or not sources.keys() >= set(approved.evidence_ids):
         return UnresolvedReview(
@@ -127,9 +161,13 @@ def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedR
         (sources[key] for key in used),
         key=lambda item: (item.published_at, item.id),
     ))
-    if "일부" in request.question and "해제" in request.question and region.regional_alert.value != "해제":
+    question = request.question
+    asks_about_partial_release = "일부" in question and "해제" in question
+    asks_to_end_notice = "안내" in question and "종료" in question
+    if (asks_about_partial_release or asks_to_end_notice) and region.regional_alert.value != "해제":
+        scope = "일부 해역 해제에" if asks_about_partial_release else "해제 대상에"
         return UnresolvedReview(
-            "조회한 공식 근거로는 일부 해역 해제에 가막만이 포함되는지 확인할 수 없습니다.",
+            f"조회한 공식 근거로는 {scope} 가막만이 포함되는지 확인할 수 없습니다.",
             "국립수산과학원 적조속보에서 해제 대상에 가막만이 포함되는지 확인하시겠어요?",
             regional_alert=UnconfirmedAlert[RegionLevel](
                 previous=approved.regional_alert, evidence_id=region.source.id,

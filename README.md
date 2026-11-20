@@ -35,7 +35,7 @@ PR에 변경 내용과 확인 결과를 기록하고, 입출력이나 환경변�
 
 ## 개발 상태
 
-가막만 대표 사례는 보관한 공식 발표와 가상 승인본으로 로컬에서 실행할 수 있습니다. 두 발표의 원문과 시연 중 조회 가능한 자료는 `data/gamak-archive.json`에 있습니다. 웹 페이지에 게시 분 단위 정보가 없어 즉시 보도자료의 정부 발령시각을 시연 자료의 조회 가능시각으로 사용합니다.
+가막만 대표 사례는 보관한 공식 발표와 가상 승인본으로 로컬에서 실행할 수 있습니다. `data/gamak-archive.json`에는 8월 26일·29일과 9월 25일 발표의 원문 링크, 발췌, 기준시각용 메타데이터가 있습니다. 웹 페이지에 게시 분 단위 정보가 없어 즉시 보도자료의 정부 발령시각을 시연 자료의 조회 가능시각으로 사용합니다. 9월 25일 자료에는 가막만 해제의 정확한 시각이 없어 해제 시각을 비워 둡니다.
 
 ### 화면 없이 대표 사례 실행
 
@@ -55,10 +55,16 @@ $env:GAMAK_DB_PATH = "data/local/ui-rehearsal.sqlite3"
 uv run streamlit run app.py --server.address 127.0.0.1
 ```
 
-IBM 경로를 실행하려면 `.env`에서 `WXO_ENDPOINT_URL`, `WXO_API_KEY`를 설정하고 `GAMAK_MODE=watsonx`로 선택합니다. 기존 교육용 설정 파일을 사용할 때는 `GAMAK_ENV_FILE`로 그 파일을 가리킬 수 있습니다. 에이전트가 반환한 판정과 대화 이력의 공식 근거 도구 결과를 모두 검증한 경우 화면에 **IBM 실호출**이 표시됩니다. 호출이나 검증에 실패하면 안내와 함께 **로컬 재현**으로 전환됩니다.
+IBM 경로를 실행하려면 `.env`에서 `WXO_ENDPOINT_URL`, `WXO_API_KEY`를 설정하고 `GAMAK_MODE=watsonx`로 선택합니다. 기존 교육용 설정 파일을 사용할 때는 `GAMAK_ENV_FILE`로 그 파일을 가리킬 수 있습니다.
+
+당직 지원 에이전트는 근거 조사 에이전트에 조사를 위임하고 판정과 경보별 인용을 제안합니다. 검색 도구는 해역과 기준시각에 맞는 원문 발췌와 승인본을 반환합니다. 백엔드는 IBM 대화 이력에서 위임과 검색을 검증하고 공식 근거와 대조해 승인 대기 초안 또는 확인 질문을 확정합니다. 검증에 성공하면 화면에 **IBM 협업 · 원문 검색 확인**과 인용 위치가 표시됩니다. 검증이 맞지 않으면 새 IBM 호출로 한 번 재시도하고, 협업 결과를 확인할 수 없으면 **로컬 재현**으로 전환됩니다.
+
+같은 화면 세션에서 요청과 기준시각의 공식 근거가 모두 같으면 기존에 검증된 협업 이력과 초안 ID를 재사용합니다. 이 경우 화면에 **IBM 협업 결과 재사용**이 표시됩니다. 기존 단일 에이전트 시연을 사용하려면 `GAMAK_MODE=watsonx-single`을 지정합니다.
 
 ### 프로젝트 에이전트 배포
 
-IBM Orchestrate ADK CLI에서 교육 환경을 활성화한 뒤 PowerShell 7에서 `./watsonx/deploy.ps1`을 실행합니다. 교육 계정의 `kiw_gamak_red_tide`에 공용 시연 자료를 조회하는 `kiw_gamak_official_evidence` 도구가 연결됩니다.
+IBM Orchestrate ADK CLI에서 교육 환경을 활성화한 뒤 PowerShell 7에서 `./watsonx/deploy-collaboration.ps1`을 실행합니다. 이 스크립트가 `kiw_gamak_search_passages`, `kiw_gamak_research`, `kiw_gamak_supervisor` 순으로 등록하고 에이전트를 배포합니다. 기존 단일 경로의 배포 스크립트는 `./watsonx/deploy.ps1`입니다.
 
 [시연 검증표와 발표 순서](docs/rehearsal.md)
+
+[팀 협업 프롬프트와 검증 시나리오](docs/two-agent-prompt-spec.md)

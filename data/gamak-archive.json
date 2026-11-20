@@ -9,6 +9,23 @@
         "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62891&menuSeq=971",
         "summary": "8월 26일 가막만에 적조 예비특보가 발표됐고 정부는 16시부터 위기경보 ‘주의’를 발령했다."
       },
+      "passages": [
+        {
+          "topic": "regional",
+          "location": "첫 문단",
+          "text": "“전남 여수 가막만과 전남 남해에 추가로 예비특보를 발표”"
+        },
+        {
+          "topic": "government",
+          "location": "첫 문단",
+          "text": "“8월 26일(화) 16시부로 적조 위기경보 ‘주의’ 단계를 발령”"
+        },
+        {
+          "topic": "water_background",
+          "location": "적조 발생 여건 문단",
+          "text": "“코클로다니움이 성장하기 적합한 24~27℃로 수온이 유지”"
+        }
+      ],
       "regions": [
         "가막만"
       ],
@@ -30,6 +47,18 @@
         "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62990&menuSeq=971",
         "summary": "8월 29일 14시부터 가막만에 적조주의보가 적용됐고 정부는 16시부터 위기경보를 ‘경계’로 높였다."
       },
+      "passages": [
+        {
+          "topic": "regional",
+          "location": "국립수산과학원 발표 문단과 대상 해역 각주",
+          "text": "“적조 주의보를 발표(8.29, 14시부)” · 대상 해역 중 “가막만”"
+        },
+        {
+          "topic": "government",
+          "location": "첫 문단",
+          "text": "“8월 29일(금) 16시부로 적조 위기경보* ‘경계’ 단계를 발령”"
+        }
+      ],
       "regions": [
         "가막만"
       ],
@@ -41,6 +70,31 @@
         "value": "경계",
         "effective_at": "2025-08-29T16:00:00+09:00"
       }
+    },
+    {
+      "source": {
+        "id": "mof-63302",
+        "title": "적조 위기경보 ‘경계’에서 ‘주의’단계로 하향 조정",
+        "publisher": "해양수산부",
+        "published_at": "2025-09-25T16:00:00+09:00",
+        "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=63302&menuSeq=971",
+        "summary": "가막만이 해제 대상 예비특보 해역에 포함됐고 정부 위기경보는 9월 25일 16시부터 주의로 하향됐다. 이 보도자료는 가막만 해제의 정확한 시각을 명시하지 않는다."
+      },
+      "regions": ["가막만"],
+      "passages": [
+        {
+          "topic": "regional",
+          "location": "국립수산과학원 조치 문단과 대상 해역 각주",
+          "text": "“나머지 6개 예비특보 해역*을 모두 해제” · 대상 해역 중 “가막만”"
+        },
+        {
+          "topic": "government",
+          "location": "첫 문단",
+          "text": "“9월 25일(목) 16시부로 적조 위기경보 단계*를 ‘경계’에서 ‘주의’**로 하향 조정”"
+        }
+      ],
+      "regional_alert": {"value": "해제", "effective_at": null},
+      "government_alert": {"value": "주의", "effective_at": "2025-09-25T16:00:00+09:00"}
     }
   ],
   "approved_notices": [

@@ -54,7 +54,7 @@ class Evidence(Contract):
 class Alert(Contract, Generic[Level]):  # noqa: UP046 - shared with the IBM tool runtime
     previous: Level
     current: Level
-    effective_at: AwareDatetime
+    effective_at: AwareDatetime | None
     evidence_id: EvidenceId
 
 
