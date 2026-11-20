@@ -80,8 +80,48 @@ def show_alert(
             st.caption(citation.passage.location)
 
 
+_REGION_COORDS: Final[dict[str, tuple[float, float]]] = {
+    "여수 가막만": (34.685, 127.675),
+    "가막만": (34.685, 127.675),
+}
+
+
+def _alert_hex(level: str | None) -> str:
+    return {
+        "적조경보": "#DC2626",
+        "적조주의보": "#F58220",
+        "예비특보": "#EAB308",
+        "해제": "#16A34A",
+    }.get(level or "", "#64748B")
+
+
+def show_region_map(result: Result) -> None:
+    """Render a Gamak Bay status map."""
+    lat, lon = _REGION_COORDS.get(result.region, (34.685, 127.675))
+    level = result.regional_alert.current if result.regional_alert else "확인 필요"
+    st.map(
+        [{"lat": lat, "lon": lon}],
+        zoom=10,
+        size=1800,
+        color=_alert_hex(level),
+        height=220,
+    )
+
+
 def show_assessment(result: Result, citations: dict[int, Citation]) -> None:
     st.subheader(result.decision)
+    banner_colors = {
+        "갱신 필요": ("#FFF7ED", "#C2410C", "#FDBA74"),
+        "유지": ("#F0FDF4", "#15803D", "#86EFAC"),
+        "확인 필요": ("#FEFCE8", "#A16207", "#FDE047"),
+    }
+    bg, fg, border = banner_colors.get(result.decision, ("#F8FAFC", "#334155", "#CBD5E1"))
+    st.html(
+        f'<div style="background:{bg};border-left:5px solid {fg};border-top:1px solid {border};'
+        f'border-right:1px solid {border};border-bottom:1px solid {border};'
+        f'padding:0.85rem 1rem;border-radius:0.5rem;margin-bottom:0.75rem;color:{fg};font-weight:600;">'
+        f'판정 결과 · {escape(result.decision)} — {escape(result.reason)}</div>'
+    )
     reason = result.reason.replace("정부 위기경보", "정부\u00a0위기경보")
     match result.decision:
         case "갱신 필요":
@@ -93,11 +133,14 @@ def show_assessment(result: Result, citations: dict[int, Citation]) -> None:
         case _ as unreachable:
             assert_never(unreachable)
 
-    regional, government = st.columns(2)
+    regional, government, map_col = st.columns([1, 1, 1.1])
     with regional:
         show_alert("해역 적조 특보", result.regional_alert, citations.get(1))
     with government:
         show_alert("정부 위기경보", result.government_alert, citations.get(2))
+    with map_col, st.container(border=True):
+        st.caption(f"해역 위치 · {result.region}")
+        show_region_map(result)
 
     if result.evidence:
         st.subheader("공식 원문")
@@ -299,4 +342,20 @@ def show_ai_governance_and_channels(
                 with st.container(border=True):
                     st.markdown(f"**{hit.entry.title}** (유사도 `{hit.score:.2f}`)")
                     st.write(hit.entry.content)
+
+    report_md = (
+        f"# 수협 적조 안내 다중 채널 리포트\n\n"
+        f"- Groundedness: {governance.groundedness_score:.1f}% (환각 위험도: {governance.hallucination_risk})\n"
+        f"- 생성 엔진: {notices.model_id if notices.used_watsonx_ai else '로컬 폴백 템플릿'}\n\n"
+        f"## 1. 어업인 SMS/알림톡\n{notices.sms_alert}\n\n"
+        f"## 2. 유관기관 공문 초안\n{notices.official_memo}\n\n"
+        f"## 3. 홈페이지·SNS 공지문\n{notices.public_notice}\n"
+    )
+    st.download_button(
+        "다중 채널 안내문 리포트 다운로드 (.md)",
+        data=report_md.encode("utf-8"),
+        file_name="gamak-red-tide-notices.md",
+        mime="text/markdown",
+        key="download_notices_md",
+    )
 
