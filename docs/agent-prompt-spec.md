@@ -7,7 +7,7 @@
 ## 1. 개요 및 목적
 
 - **목적**: 당직자가 해역, 기준시각(KST), 직전 승인본 ID, 질문을 입력하면 에이전트가 공식 발표문헌과 직전 승인본을 대조하여 갱신 여부를 판정하고, 승인 대기 초안 또는 확인 질문을 공통 JSON 스키마로 출력합니다.
-- **연동 대상**: 
+- **연동 대상**
   - `feat/backend-ledger`: SQLite 모의 승인함(Ledger) 중복 방지 및 공식 자료 조회 백엔드
   - `feat/demo-ui`: Streamlit 화면 표출
   - `feat/watsonx-integration`: IBM watsonx Orchestrate 및 LLM 연동
@@ -71,3 +71,5 @@
 에이전트는 엄격하게 Grounding(공식 근거 일치), Temporal Cutoff(기준시각 준수), Schema Validation(공통 JSON 포맷)을 준수하도록 설계되었습니다.
 
 배포 스크립트는 시스템 프롬프트의 핵심 원칙을 Orchestrate 에이전트의 지침에 포함합니다. 에이전트는 도구 조회 후 판정과 근거 ID를 반환하며, SQLite 확인 이력과 최종 공통 JSON은 백엔드에서 확정합니다.
+
+[프롬프트 JSON](../prompts/agent-prompt.json)에서 에이전트 응답과 공통 응답의 필드를 확인할 수 있습니다. [검증 시나리오 JSON](../examples/demo-scenarios.json)은 5개 사례의 입력과 기대 결과를 한 파일에 모아 둡니다.
