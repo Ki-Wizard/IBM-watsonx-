@@ -1,0 +1,54 @@
+{
+  "region": "가막만",
+  "as_of": "2025-08-29T16:30:00+09:00",
+  "approved_notice_id": "gamak-2025-08-26-demo",
+  "question": "가막만 적조 특보 현황과 현장 수온을 확인해 안내문을 작성해줘.",
+  "mode": "local",
+  "decision": "갱신 필요",
+  "reason": "직전 승인본과 비교해 해역 특보와 정부 위기경보가 격상됐으나, 당시 가막만의 실측 수온 데이터는 공식 발표자료에 누락되어 있습니다.",
+  "regional_alert": {
+    "previous": "예비특보",
+    "current": "적조주의보",
+    "effective_at": "2025-08-29T14:00:00+09:00",
+    "evidence_id": "mof-62990"
+  },
+  "government_alert": {
+    "previous": "주의",
+    "current": "경계",
+    "effective_at": "2025-08-29T16:00:00+09:00",
+    "evidence_id": "mof-62990"
+  },
+  "evidence": [
+    {
+      "id": "mof-62891",
+      "title": "적조 위기경보 ‘주의’ 단계 발령",
+      "publisher": "해양수산부",
+      "published_at": "2025-08-26T16:00:00+09:00",
+      "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62891&menuSeq=971",
+      "summary": "8월 26일 가막만에 적조 예비특보가 발표됐고 정부는 16시부터 위기경보 ‘주의’를 발령했다."
+    },
+    {
+      "id": "mof-62990",
+      "title": "적조 위기경보 ‘경계’ 단계 발령",
+      "publisher": "해양수산부",
+      "published_at": "2025-08-29T16:00:00+09:00",
+      "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62990&menuSeq=971",
+      "summary": "8월 29일 14시부터 가막만에 적조주의보가 적용됐고 정부는 16시부터 위기경보를 ‘경계’로 높였다."
+    }
+  ],
+  "water_temperature": {
+    "status": "확인 필요",
+    "celsius": null
+  },
+  "draft": {
+    "id": "draft-5b09a129b42573bb893bbab47f88fa3b1bb18f172dff30c1b67812596520fbb8",
+    "status": "승인 대기",
+    "text": "가막만 적조 특보는 8월 29일 14시부터 적조주의보로 변경됐습니다. 정부 위기경보는 같은 날 16시부터 ‘경계’입니다. 당시 가막만 수온은 확인이 필요합니다."
+  },
+  "follow_up_question": null,
+  "ledger": {
+    "before": 0,
+    "after": 1,
+    "action": "created"
+  }
+}
