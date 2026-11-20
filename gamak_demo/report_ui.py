@@ -101,10 +101,10 @@ def show_region_map(result: Result) -> None:
     level = result.regional_alert.current if result.regional_alert else "확인 필요"
     st.map(
         [{"lat": lat, "lon": lon}],
-        zoom=10,
-        size=1800,
+        zoom=11,
+        size=450,
         color=_alert_hex(level),
-        height=220,
+        height=320,
     )
 
 
@@ -133,12 +133,12 @@ def show_assessment(result: Result, citations: dict[int, Citation]) -> None:
         case _ as unreachable:
             assert_never(unreachable)
 
-    regional, government, map_col = st.columns([1, 1, 1.1])
+    regional, government = st.columns(2)
     with regional:
         show_alert("해역 적조 특보", result.regional_alert, citations.get(1))
     with government:
         show_alert("정부 위기경보", result.government_alert, citations.get(2))
-    with map_col, st.container(border=True):
+    with st.container(border=True):
         st.caption(f"해역 위치 · {result.region}")
         show_region_map(result)
 
