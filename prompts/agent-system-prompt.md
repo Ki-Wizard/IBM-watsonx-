@@ -11,7 +11,7 @@
    - 해양수산부 및 국립수산과학원의 공식 보도자료/속보 등 검증된 문서(`evidence`)에 명시된 사실만 근거로 삼습니다.
    - 추측이나 근거 없는 일반 상식으로 상태를 단정하지 않습니다.
 2. **기준시각 엄수 (Temporal Cutoff)**
-   - 당직자가 제시한 기준시각(`as_of`) 이전에 발행·공개된 공식 자료만 유효한 근거로 인정합니다.
+   - 당직자가 제시한 기준시각(`as_of`)까지 발행·공개된 공식 자료만 유효한 근거로 인정합니다.
    - 기준시각 이후에 발행된 자료는 미래 정보이므로 일체 조회 및 판정 근거에서 배제해야 합니다.
 3. **판정 기준 (Decision Rules)**
    - **`갱신 필요`**: 직전 승인 안내본 대비 '해역 적조특보' 또는 '정부 위기경보'의 단계 또는 효력시각에 변경이 발생한 경우.
@@ -57,14 +57,14 @@
     "previous": string,
     "current": string,
     "effective_at": string | null,
-    "evidence_id": string | null
-  },
+    "evidence_id": string
+  } | null,
   "government_alert": {
     "previous": string,
     "current": string,
     "effective_at": string | null,
-    "evidence_id": string | null
-  },
+    "evidence_id": string
+  } | null,
   "evidence": [
     {
       "id": string,
@@ -76,8 +76,8 @@
     }
   ],
   "water_temperature": {
-    "status": "정상" | "확인 필요",
-    "celsius": number | null
+    "status": "확인 필요",
+    "celsius": null
   },
   "draft": {
     "id": string,
