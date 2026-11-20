@@ -15,6 +15,7 @@ from gamak_demo.collaboration_contract import (
 )
 from gamak_demo.collaborative import HANDOFF, verified_citations, verify_run
 from gamak_demo.contract import Request
+from gamak_demo.nifs import Bulletin, NifsChecked
 from gamak_demo.rag import retrieve
 from gamak_demo.service import prepare
 from gamak_demo.watsonx import (
@@ -56,9 +57,11 @@ def test_proposal_must_cite_each_alert_using_the_right_passage() -> None:
 
 def recorded_run(
     search: SearchReply, *, handoff_content: str = "Transferring", search_first: bool = False,
+    citations: tuple[str, str] = ("mof-62990-regional", "mof-62990-government"),
 ) -> AgentRun:
-    content = ('{"decision":"갱신 필요","regional_citation":"mof-62990-regional",'
-               '"government_citation":"mof-62990-government"}')
+    content = json.dumps({
+        "decision": "갱신 필요", "regional_citation": citations[0], "government_citation": citations[1],
+    }, ensure_ascii=False)
     chat = Chat(thread_id=uuid4(), choices=(Choice(message=Message(content=content)),))
     handoff_steps = (
         Step(type="tool_response", name=HANDOFF, tool_call_id="handoff", content=handoff_content),
@@ -98,6 +101,27 @@ def test_verified_run_rejects_a_failed_or_late_handoff(failed_handoff: str) -> N
     )
     with pytest.raises(WatsonxProblem):
         verify_run(invalid, search, assessment)
+
+
+def test_verified_research_handoff_keeps_nifs_and_mof_citations_separate() -> None:
+    request = Request.model_validate_json(FIXTURE.with_name("gamak-release.request.json").read_bytes())
+    expected = SearchReply(retrieval=retrieve(request), execution_code=retrieval_code("release-nonce"))
+    bulletin = Bulletin(
+        code="20250925-001", survey_day=request.as_of.date().replace(day=25),
+        breaking="- 특보 해제 : 사천·강진만, 가막만",
+    )
+    actual = expected.model_copy(update={"nifs": NifsChecked(bulletin=bulletin), "nifs_release_confirmed": True})
+    citations = ("nifs-20250925-001-regional", "mof-63302-government")
+    run = recorded_run(actual, citations=citations)
+
+    verified = verify_run(run, expected, prepare(request).assessment, request=request)
+
+    assert tuple(item.id for item in verified.citations) == citations
+    early = request.model_copy(update={"as_of": request.as_of.replace(day=25)})
+    early_expected = expected.model_copy(update={"retrieval": retrieve(early)})
+    wrong_time = actual.model_copy(update={"retrieval": early_expected.retrieval})
+    with pytest.raises(WatsonxProblem):
+        verify_run(recorded_run(wrong_time, citations=citations), early_expected, prepare(early).assessment, request=early)
 
 
 def test_collaboration_retries_before_storing_when_first_trace_is_invalid(

@@ -45,7 +45,7 @@ class Request(Contract):
 class Evidence(Contract):
     id: EvidenceId
     title: str
-    publisher: Literal["해양수산부"]
+    publisher: Literal["해양수산부", "국립수산과학원"]
     published_at: AwareDatetime
     url: str
     summary: str

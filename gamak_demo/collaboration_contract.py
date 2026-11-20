@@ -5,6 +5,7 @@ from hashlib import sha256
 from typing import Final
 
 from .contract import Contract, Decision
+from .nifs import NifsReport
 from .rag import PassageId, Retrieval
 
 SUPERVISOR: Final = "kiw_gamak_supervisor"
@@ -19,6 +20,8 @@ def retrieval_code(challenge: str) -> str:
 class SearchReply(Contract):
     retrieval: Retrieval
     execution_code: str
+    nifs: NifsReport | None = None
+    nifs_release_confirmed: bool | None = None
 
 
 class ReviewProposal(Contract):
