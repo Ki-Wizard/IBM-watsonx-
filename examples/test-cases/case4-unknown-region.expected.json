@@ -1,0 +1,42 @@
+{
+  "region": "가막만",
+  "as_of": "2025-08-30T10:00:00+09:00",
+  "approved_notice_id": "gamak-2025-08-29-demo",
+  "question": "남해안 일부 해역 특보가 해제되었다는데 가막만 안내를 종료해도 되나요?",
+  "mode": "local",
+  "decision": "확인 필요",
+  "reason": "조회한 공식 근거로는 일부 해역 해제에 가막만이 포함되는지 확인할 수 없습니다.",
+  "regional_alert": {
+    "previous": "적조주의보",
+    "current": "확인 필요",
+    "effective_at": null,
+    "evidence_id": "mof-62990"
+  },
+  "government_alert": {
+    "previous": "경계",
+    "current": "확인 필요",
+    "effective_at": null,
+    "evidence_id": "mof-62990"
+  },
+  "evidence": [
+    {
+      "id": "mof-62990",
+      "title": "적조 위기경보 ‘경계’ 단계 발령",
+      "publisher": "해양수산부",
+      "published_at": "2025-08-29T16:00:00+09:00",
+      "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62990&menuSeq=971",
+      "summary": "8월 29일 14시부터 가막만에 적조주의보가 적용됐고 정부는 16시부터 위기경보를 ‘경계’로 높였다."
+    }
+  ],
+  "water_temperature": {
+    "status": "확인 필요",
+    "celsius": null
+  },
+  "draft": null,
+  "follow_up_question": "국립수산과학원 적조속보에서 해제 대상에 가막만이 포함되는지 확인하시겠어요?",
+  "ledger": {
+    "before": 1,
+    "after": 1,
+    "action": "none"
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "region": "가막만",
+  "as_of": "2025-08-26T17:00:00+09:00",
+  "approved_notice_id": "gamak-2025-08-26-demo",
+  "question": "8월 26일 발령된 안내를 현재 시점(17:00)에도 유지해도 됩니까?",
+  "mode": "local",
+  "decision": "유지",
+  "reason": "직전 승인본 이후 해역 특보와 정부 위기경보의 변경이 확인되지 않았습니다.",
+  "regional_alert": {
+    "previous": "예비특보",
+    "current": "예비특보",
+    "effective_at": "2025-08-26T16:00:00+09:00",
+    "evidence_id": "mof-62891"
+  },
+  "government_alert": {
+    "previous": "주의",
+    "current": "주의",
+    "effective_at": "2025-08-26T16:00:00+09:00",
+    "evidence_id": "mof-62891"
+  },
+  "evidence": [
+    {
+      "id": "mof-62891",
+      "title": "적조 위기경보 ‘주의’ 단계 발령",
+      "publisher": "해양수산부",
+      "published_at": "2025-08-26T16:00:00+09:00",
+      "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62891&menuSeq=971",
+      "summary": "8월 26일 가막만에 적조 예비특보가 발표됐고 정부는 16시부터 위기경보 ‘주의’를 발령했다."
+    }
+  ],
+  "water_temperature": {
+    "status": "확인 필요",
+    "celsius": null
+  },
+  "draft": null,
+  "follow_up_question": null,
+  "ledger": {
+    "before": 0,
+    "after": 0,
+    "action": "none"
+  }
+}
