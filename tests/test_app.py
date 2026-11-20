@@ -16,6 +16,8 @@ def test_local_form_uses_real_ledger(tmp_path: Path, monkeypatch: MonkeyPatch) -
     assert not app.exception
     assert any(item.value == "갱신 필요" for item in app.subheader)
     assert any("승인함 0 → 1건" in item.value for item in app.markdown)
+    assert any("근거 1 원문" in item.value for item in app.markdown)
+    assert any("근거 2 원문" in item.value for item in app.markdown)
     draft_id = app.code[0].value
 
     app.button[0].click().run()

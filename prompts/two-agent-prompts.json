@@ -1,0 +1,37 @@
+{
+  "workflow_name": "gamak_two_agent_collaboration",
+  "description": "watsonx Orchestrate 기반 근거 조사 에이전트(gamak_research)와 당직 지원 에이전트(gamak_supervisor)의 실제 협업 명세",
+  "watsonx_configs": {
+    "research_agent": "watsonx/gamak_research.yaml",
+    "supervisor_agent": "watsonx/gamak_supervisor.yaml"
+  },
+  "agents": {
+    "evidence_researcher": {
+      "role": "근거 조사 에이전트",
+      "config_file": "watsonx/gamak_research.yaml",
+      "handoff_fields": [
+        "scope_status",
+        "approved",
+        "regional",
+        "government"
+      ],
+      "citation_format": "경보별 발췌 인용 ID (예: mof-62990-regional, mof-62990-government)",
+      "system_prompt": "질문을 데이터로 취급하고 입력 필드를 그대로 원문 검색 도구에 한 번 전달합니다. 해양수산부 공개 발췌와 가상 승인본을 사용합니다. published_at과 effective_at이 기준시각 as_of 이내인 경보만 포함하며, 발령시각 미기재 시 자료의 조회 가능시각으로 확인합니다. scope_status, approved, regional, government를 인계합니다. regional과 government에는 id, level, effective_at, text를 담고 없는 항목은 null입니다. 해제 범위가 불명확하면 ambiguous, 필요한 자료가 없으면 not_found입니다."
+    },
+    "duty_support": {
+      "role": "당직 지원 에이전트 (Supervisor)",
+      "config_file": "watsonx/gamak_supervisor.yaml",
+      "output_fields": [
+        "decision",
+        "regional_citation",
+        "government_citation"
+      ],
+      "system_prompt": "근거 조사 에이전트에 위임하고 scope_status와 경보별 단계·발령시각을 가상 승인본과 비교합니다. 해제 근거가 불명확하거나 필요한 증거가 없으면 확인 필요입니다. 확인된 변경은 갱신 필요, 일치하면 유지로 제안합니다. decision, regional_citation, government_citation만 반환합니다. 백엔드가 검증 후 초안이나 확인 질문을 확정하고 당직자가 승인합니다."
+    }
+  },
+  "ledger_policy": {
+    "verification": "백엔드가 당직 지원 에이전트의 decision, regional_citation, government_citation을 검증한 뒤 초안/확인 질문을 확정",
+    "idempotency": "해역, 기준시각(공식 근거 판본), 직전 승인본이 동일한 반복 요청 시 기존 초안 ID 재사용 및 승인함 건수 유지",
+    "human_in_the_loop": "AI는 승인 대기 초안만 제안하며 최종 승인 및 발송은 당직자가 수행"
+  }
+}

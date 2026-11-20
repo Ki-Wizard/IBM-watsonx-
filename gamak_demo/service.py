@@ -52,16 +52,23 @@ def _assess(request: Request, official: OfficialReview) -> PreparedReview:
     )
     at = regional.effective_at
     gov_at = government.effective_at
-    regional_phrase = (
-        f"{regional.current}로 변경됐습니다." if regional.previous != regional.current
-        else f"{regional.current}입니다."
-    )
-    gov_date = "같은 날" if at.date() == gov_at.date() else f"{gov_at.month}월 {gov_at.day}일"
+    if regional.current == "해제":
+        regional_phrase = "해제됐습니다."
+    elif regional.previous != regional.current:
+        regional_phrase = f"{regional.current}로 변경됐습니다."
+    else:
+        regional_phrase = f"{regional.current}입니다."
+    when = f"{at.month}월 {at.day}일 {_time(at)}부터" if at else "공식 발표에 따르면"
+    if gov_at is None:
+        government_when = "공식 발표에 따르면"
+    else:
+        gov_date = "같은 날" if at and at.date() == gov_at.date() else f"{gov_at.month}월 {gov_at.day}일"
+        government_when = f"{gov_date} {_time(gov_at)}부터"
     return PreparedReview(request, summary, Draft(
         id=DraftId(f"draft-{sha256(seed.encode('utf-8')).hexdigest()}"),
         text=(
-            f"{GAMAK} 적조 특보는 {at.month}월 {at.day}일 {_time(at)}부터 {regional_phrase} "
-            f"정부 위기경보는 {gov_date} {_time(gov_at)}부터 ‘{government.current}’입니다. "
+            f"{GAMAK} 적조 특보는 {when} {regional_phrase} "
+            f"정부 위기경보는 {government_when} ‘{government.current}’입니다. "
             f"당시 {GAMAK} 수온은 확인이 필요합니다."
         ),
     ))

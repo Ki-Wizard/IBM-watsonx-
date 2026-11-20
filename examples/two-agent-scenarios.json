@@ -1,0 +1,236 @@
+{
+  "title": "2-에이전트 협업 검증 시나리오 (실제 인계 규격 반영)",
+  "version": "2.1.1",
+  "scenarios": [
+    {
+      "scenario_id": "cutoff-compare-maintain",
+      "category": "같은 질문 기준시각 비교 (시점 A: 8월 26일)",
+      "description": "동일 질문(\"이 안내를 계속 써도 되나?\")을 8월 26일 16:30 기준시각으로 조회해 8월 29일 발표를 배제하고 '유지'로 판정하는 사례",
+      "request": {
+        "region": "가막만",
+        "as_of": "2025-08-26T16:30:00+09:00",
+        "approved_notice_id": "gamak-2025-08-26-demo",
+        "question": "이 안내를 계속 써도 되나?"
+      },
+      "agent1_handoff": {
+        "scope_status": "confirmed",
+        "approved": {
+          "regional": "예비특보",
+          "government": "주의",
+          "regional_effective_at": "2025-08-26T16:00:00+09:00",
+          "government_effective_at": "2025-08-26T16:00:00+09:00"
+        },
+        "regional": {
+          "id": "mof-62891-regional",
+          "level": "예비특보",
+          "effective_at": "2025-08-26T16:00:00+09:00",
+          "text": "“전남 여수 가막만과 전남 남해에 추가로 예비특보를 발표”"
+        },
+        "government": {
+          "id": "mof-62891-government",
+          "level": "주의",
+          "effective_at": "2025-08-26T16:00:00+09:00",
+          "text": "“8월 26일(화) 16시부로 적조 위기경보 ‘주의’ 단계를 발령”"
+        }
+      },
+      "agent2_output": {
+        "decision": "유지",
+        "regional_citation": "mof-62891-regional",
+        "government_citation": "mof-62891-government"
+      },
+      "backend_finalized": {
+        "draft_text": null,
+        "follow_up_question": null,
+        "ledger": {
+          "before": 0,
+          "after": 0,
+          "action": "none"
+        }
+      }
+    },
+    {
+      "scenario_id": "cutoff-compare-update",
+      "category": "같은 질문 기준시각 비교 (시점 B: 8월 29일)",
+      "description": "시점 A와 완전히 동일한 질문(\"이 안내를 계속 써도 되나?\")을 8월 29일 16:30 기준시각으로 조회해 '갱신 필요'로 판정하는 사례",
+      "request": {
+        "region": "가막만",
+        "as_of": "2025-08-29T16:30:00+09:00",
+        "approved_notice_id": "gamak-2025-08-26-demo",
+        "question": "이 안내를 계속 써도 되나?"
+      },
+      "agent1_handoff": {
+        "scope_status": "confirmed",
+        "approved": {
+          "regional": "예비특보",
+          "government": "주의",
+          "regional_effective_at": "2025-08-26T16:00:00+09:00",
+          "government_effective_at": "2025-08-26T16:00:00+09:00"
+        },
+        "regional": {
+          "id": "mof-62990-regional",
+          "level": "적조주의보",
+          "effective_at": "2025-08-29T14:00:00+09:00",
+          "text": "“적조 주의보를 발표(8.29, 14시부)” · 대상 해역 중 “가막만”"
+        },
+        "government": {
+          "id": "mof-62990-government",
+          "level": "경계",
+          "effective_at": "2025-08-29T16:00:00+09:00",
+          "text": "“8월 29일(금) 16시부로 적조 위기경보* ‘경계’ 단계를 발령”"
+        }
+      },
+      "agent2_output": {
+        "decision": "갱신 필요",
+        "regional_citation": "mof-62990-regional",
+        "government_citation": "mof-62990-government"
+      },
+      "backend_finalized": {
+        "draft_text": "가막만 적조 특보는 8월 29일 14시부터 적조주의보로 변경됐습니다. 정부 위기경보는 같은 날 16시부터 ‘경계’입니다. 당시 가막만 수온은 확인이 필요합니다.",
+        "follow_up_question": null,
+        "ledger": {
+          "before": 0,
+          "after": 1,
+          "action": "created"
+        }
+      }
+    },
+    {
+      "scenario_id": "repeat-idempotency",
+      "category": "동일 요청 반복 (승인함 중복 방지)",
+      "description": "해역, 기준시각, 직전 승인본이 동일한 요청을 재실행하여 기존 초안을 재사용하고 승인함 건수를 1건으로 유지하는 사례",
+      "request": {
+        "region": "가막만",
+        "as_of": "2025-08-29T16:30:00+09:00",
+        "approved_notice_id": "gamak-2025-08-26-demo",
+        "question": "이 안내를 계속 써도 되나?"
+      },
+      "agent1_handoff": {
+        "scope_status": "confirmed",
+        "approved": {
+          "regional": "예비특보",
+          "government": "주의",
+          "regional_effective_at": "2025-08-26T16:00:00+09:00",
+          "government_effective_at": "2025-08-26T16:00:00+09:00"
+        },
+        "regional": {
+          "id": "mof-62990-regional",
+          "level": "적조주의보",
+          "effective_at": "2025-08-29T14:00:00+09:00",
+          "text": "“적조 주의보를 발표(8.29, 14시부)” · 대상 해역 중 “가막만”"
+        },
+        "government": {
+          "id": "mof-62990-government",
+          "level": "경계",
+          "effective_at": "2025-08-29T16:00:00+09:00",
+          "text": "“8월 29일(금) 16시부로 적조 위기경보* ‘경계’ 단계를 발령”"
+        }
+      },
+      "agent2_output": {
+        "decision": "갱신 필요",
+        "regional_citation": "mof-62990-regional",
+        "government_citation": "mof-62990-government"
+      },
+      "backend_finalized": {
+        "draft_text": "가막만 적조 특보는 8월 29일 14시부터 적조주의보로 변경됐습니다. 정부 위기경보는 같은 날 16시부터 ‘경계’입니다. 당시 가막만 수온은 확인이 필요합니다.",
+        "follow_up_question": null,
+        "ledger": {
+          "before": 1,
+          "after": 1,
+          "action": "reused"
+        }
+      }
+    },
+    {
+      "scenario_id": "ambiguous-release-scope",
+      "category": "해제 범위 불명 사례",
+      "description": "일부 해역 해제 여부가 공식 원문에서 확인되지 않아 scope_status: ambiguous 전달 후 '확인 필요'와 후속 질문을 남기는 사례",
+      "request": {
+        "region": "가막만",
+        "as_of": "2025-08-30T10:00:00+09:00",
+        "approved_notice_id": "gamak-2025-08-29-demo",
+        "question": "남해안 일부 해역 특보가 해제되었다는데 가막만 안내를 종료해도 되나요?"
+      },
+      "agent1_handoff": {
+        "scope_status": "ambiguous",
+        "approved": {
+          "regional": "적조주의보",
+          "government": "경계",
+          "regional_effective_at": "2025-08-29T14:00:00+09:00",
+          "government_effective_at": "2025-08-29T16:00:00+09:00"
+        },
+        "regional": {
+          "id": "mof-62990-regional",
+          "level": "적조주의보",
+          "effective_at": "2025-08-29T14:00:00+09:00",
+          "text": "“적조 주의보를 발표(8.29, 14시부)” · 대상 해역 중 “가막만”"
+        },
+        "government": {
+          "id": "mof-62990-government",
+          "level": "경계",
+          "effective_at": "2025-08-29T16:00:00+09:00",
+          "text": "“8월 29일(금) 16시부로 적조 위기경보* ‘경계’ 단계를 발령”"
+        }
+      },
+      "agent2_output": {
+        "decision": "확인 필요",
+        "regional_citation": "mof-62990-regional",
+        "government_citation": "mof-62990-government"
+      },
+      "backend_finalized": {
+        "draft_text": null,
+        "follow_up_question": "국립수산과학원 적조속보에서 해제 대상에 가막만이 포함되는지 확인하시겠어요?",
+        "ledger": {
+          "before": 1,
+          "after": 1,
+          "action": "none"
+        }
+      }
+    },
+    {
+      "scenario_id": "missing-water-temperature",
+      "category": "당시 수온 누락 사례",
+      "description": "특보·위기경보 변경은 확인되었으나 실측 수온 데이터가 누락되어, 수온 '확인 필요' 표기를 포함한 초안을 생성하는 사례",
+      "request": {
+        "region": "가막만",
+        "as_of": "2025-08-29T16:30:00+09:00",
+        "approved_notice_id": "gamak-2025-08-26-demo",
+        "question": "가막만 적조 특보 현황과 현장 수온을 확인해 안내문을 작성해줘."
+      },
+      "agent1_handoff": {
+        "scope_status": "confirmed",
+        "approved": {
+          "regional": "예비특보",
+          "government": "주의",
+          "regional_effective_at": "2025-08-26T16:00:00+09:00",
+          "government_effective_at": "2025-08-26T16:00:00+09:00"
+        },
+        "regional": {
+          "id": "mof-62990-regional",
+          "level": "적조주의보",
+          "effective_at": "2025-08-29T14:00:00+09:00",
+          "text": "“적조 주의보를 발표(8.29, 14시부)” · 대상 해역 중 “가막만”"
+        },
+        "government": {
+          "id": "mof-62990-government",
+          "level": "경계",
+          "effective_at": "2025-08-29T16:00:00+09:00",
+          "text": "“8월 29일(금) 16시부로 적조 위기경보* ‘경계’ 단계를 발령”"
+        }
+      },
+      "agent2_output": {
+        "decision": "갱신 필요",
+        "regional_citation": "mof-62990-regional",
+        "government_citation": "mof-62990-government"
+      },
+      "backend_finalized": {
+        "draft_text": "가막만 적조 특보는 8월 29일 14시부터 적조주의보로 변경됐습니다. 정부 위기경보는 같은 날 16시부터 ‘경계’입니다. 당시 가막만 수온은 확인이 필요합니다.",
+        "follow_up_question": null,
+        "ledger": {
+          "before": 0,
+          "after": 1,
+          "action": "created"
+        }
+      }
+    }
+  ]
+}

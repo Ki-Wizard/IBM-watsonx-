@@ -79,12 +79,14 @@ class Choice(BaseModel):
 class Chat(BaseModel):
     thread_id: UUID
     choices: tuple[Choice, ...]
+    trace_id: str | None = None
 
 
 class Step(BaseModel):
     type: str
     name: str | None = None
     content: str | None = None
+    tool_call_id: str | None = None
 
 
 class StepGroup(BaseModel):
@@ -94,6 +96,12 @@ class StepGroup(BaseModel):
 class History(BaseModel):
     role: str
     step_history: tuple[StepGroup, ...] | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class AgentRun:
+    chat: Chat
+    history: tuple[History, ...]
 
 
 _AGENT_LIST: Final = TypeAdapter(tuple[Agent, ...] | AgentList)
@@ -112,13 +120,18 @@ def _connect(endpoint: str) -> httpx2.Client:
     )
 
 
-def _verified_reply(
-    chat: Chat, history: tuple[History, ...], expected: AgentReply,
-) -> AgentReply:
+def proposal_json(chat: Chat) -> str:
     if not chat.choices:
         message = "IBM 에이전트 응답이 비어 있습니다."
         raise WatsonxProblem(message)
+    content = chat.choices[0].message.content.strip()
+    fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", content, flags=re.DOTALL | re.IGNORECASE)
+    return fenced[1] if fenced else content
 
+
+def _verified_reply(
+    chat: Chat, history: tuple[History, ...], expected: AgentReply,
+) -> AgentReply:
     traces = [
         step.content
         for message in history if message.role == "assistant"
@@ -130,9 +143,7 @@ def _verified_reply(
         message = "IBM 대화 이력에서 공식 근거 도구의 실행 결과를 확인할 수 없습니다."
         raise WatsonxProblem(message)
 
-    content = chat.choices[0].message.content.strip()
-    fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", content, flags=re.DOTALL | re.IGNORECASE)
-    proposal = AgentProposal.model_validate_json(fenced[1] if fenced else content)
+    proposal = AgentProposal.model_validate_json(proposal_json(chat))
     actual_tool_reply = AgentReply.model_validate_json(traces[0])
     evidence_ids = sorted(source.id for source in expected.assessment.evidence)
     if (
@@ -145,14 +156,8 @@ def _verified_reply(
     return actual_tool_reply
 
 
-def review_watsonx(request: Request, db: Path) -> Result:
-    """Write a draft only after validating the IBM JSON response and real tool trace."""
-    settings = Settings.from_env()
-    prepared = prepare(request)
-    challenge = token_hex(16)
-    expected = AgentReply(
-        assessment=prepared.assessment, execution_code=execution_code(challenge),
-    )
+def run_agent(request_text: str, settings: Settings) -> AgentRun:
+    """Call a deployed agent and fetch its real IBM conversation history."""
     try:
         with _connect(settings.endpoint) as client:
             auth = client.post(IAM, data={
@@ -176,17 +181,13 @@ def review_watsonx(request: Request, db: Path) -> Result:
                 message = "배포된 가막만 IBM 에이전트를 찾을 수 없습니다."
                 raise WatsonxProblem(message)
 
-            request_text = json.dumps(
-                {"request_json": request.model_dump_json(), "challenge": challenge},
-                ensure_ascii=False,
-            )
             answer = client.post(f"v1/orchestrate/{agent.id}/chat/completions", json={
                 "messages": [{"role": "user", "content": request_text}],
                 "stream": False,
             }).raise_for_status()
             chat = Chat.model_validate_json(answer.content)
             trace = client.get(f"v1/orchestrate/threads/{chat.thread_id}/messages").raise_for_status()
-            verified = _verified_reply(chat, _HISTORY.validate_json(trace.content), expected)
+            return AgentRun(chat, _HISTORY.validate_json(trace.content))
     except httpx2.HTTPStatusError as exc:
         message = f"IBM 서비스 호출에 실패했습니다 (HTTP {exc.response.status_code})."
         raise WatsonxProblem(message) from None
@@ -197,4 +198,22 @@ def review_watsonx(request: Request, db: Path) -> Result:
         message = "IBM 응답이 공통 JSON 형식과 일치하지 않습니다."
         raise WatsonxProblem(message) from None
 
+
+def review_watsonx(request: Request, db: Path) -> Result:
+    """Write a draft only after validating the IBM JSON response and real tool trace."""
+    settings = Settings.from_env()
+    prepared = prepare(request)
+    challenge = token_hex(16)
+    expected = AgentReply(
+        assessment=prepared.assessment, execution_code=execution_code(challenge),
+    )
+    request_text = json.dumps(
+        {"request_json": request.model_dump_json(), "challenge": challenge}, ensure_ascii=False,
+    )
+    run = run_agent(request_text, settings)
+    try:
+        verified = _verified_reply(run.chat, run.history, expected)
+    except ValidationError:
+        message = "IBM 응답이 공통 JSON 형식과 일치하지 않습니다."
+        raise WatsonxProblem(message) from None
     return finalize(replace(prepared, assessment=verified.assessment), db, "watsonx")
