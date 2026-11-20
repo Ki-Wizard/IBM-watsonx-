@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Final, Generic
 
 from pydantic import AwareDatetime, ValidationError
 
@@ -13,6 +13,7 @@ from .contract import (
     Evidence,
     EvidenceId,
     GovernmentLevel,
+    Level,
     NoticeId,
     RegionLevel,
     Request,
@@ -23,7 +24,7 @@ GAMAK: Final = "가막만"
 GAMAK_NAMES: Final = frozenset({GAMAK, "여수 가막만", "전남 여수 가막만"})
 
 
-class IssuedAlert[Level: (RegionLevel, GovernmentLevel)](Contract):
+class IssuedAlert(Contract, Generic[Level]):  # noqa: UP046 - shared with the IBM tool runtime
     value: Level
     effective_at: AwareDatetime
 

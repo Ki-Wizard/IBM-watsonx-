@@ -2,22 +2,22 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
 from typing import assert_never
 
-from .contract import Assessment, Draft, DraftId, ExecutionMode, Request, Result
+from .contract import (
+    Assessment,
+    Draft,
+    DraftId,
+    ExecutionMode,
+    PreparedReview,
+    Request,
+    Result,
+)
 from .evidence import ARCHIVE, GAMAK, OfficialReview, UnresolvedReview, lookup
 from .ledger import record
-
-
-@dataclass(frozen=True, slots=True)
-class PreparedReview:
-    request: Request
-    assessment: Assessment
-    draft: Draft | None
 
 
 def _time(at: datetime) -> str:

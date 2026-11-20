@@ -4,12 +4,16 @@ from __future__ import annotations
 import sqlite3
 from contextlib import closing
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
-from .contract import Draft, ExecutionMode, LedgerAction, LedgerStatus, Result
-
-if TYPE_CHECKING:
-    from .service import PreparedReview
+from .contract import (
+    Draft,
+    ExecutionMode,
+    LedgerAction,
+    LedgerStatus,
+    PreparedReview,
+    Result,
+)
 
 _SCHEMA: Final = """
 CREATE TABLE IF NOT EXISTS drafts (

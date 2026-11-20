@@ -47,3 +47,18 @@ uv run pytest -q
 ```
 
 빈 DB에서 동일 요청을 실행하면 승인함은 `0 → 1 → 1`이 되고 두 응답의 초안 ID가 같습니다. 새 리허설을 시작할 때는 아직 사용하지 않은 DB 파일명을 지정하세요.
+
+### Streamlit 리허설
+
+```powershell
+$env:GAMAK_DB_PATH = "data/local/ui-rehearsal.sqlite3"
+uv run streamlit run app.py --server.address 127.0.0.1
+```
+
+IBM 경로를 실행하려면 `.env`에서 `WXO_ENDPOINT_URL`, `WXO_API_KEY`를 설정하고 `GAMAK_MODE=watsonx`로 선택합니다. 기존 교육용 설정 파일을 사용할 때는 `GAMAK_ENV_FILE`로 그 파일을 가리킬 수 있습니다. 에이전트가 반환한 판정과 대화 이력의 공식 근거 도구 결과를 모두 검증한 경우 화면에 **IBM 실호출**이 표시됩니다. 호출이나 검증에 실패하면 안내와 함께 **로컬 재현**으로 전환됩니다.
+
+### 프로젝트 에이전트 배포
+
+IBM Orchestrate ADK CLI에서 교육 환경을 활성화한 뒤 PowerShell 7에서 `./watsonx/deploy.ps1`을 실행합니다. 교육 계정의 `kiw_gamak_red_tide`에 공용 시연 자료를 조회하는 `kiw_gamak_official_evidence` 도구가 연결됩니다.
+
+[시연 검증표와 발표 순서](docs/rehearsal.md)

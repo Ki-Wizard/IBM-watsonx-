@@ -1,10 +1,17 @@
 """The shared request, evidence and response models."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Final, Literal, NewType
+from typing import Annotated, Final, Generic, Literal, NewType, TypeVar
 
-from pydantic import AwareDatetime, BaseModel, ConfigDict, StringConstraints, field_validator
+from pydantic import (
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    StringConstraints,
+    field_validator,
+)
 
 KST: Final = timezone(timedelta(hours=9))
 NoticeId = NewType("NoticeId", str)
@@ -15,6 +22,7 @@ ExecutionMode = Literal["local", "watsonx"]
 LedgerAction = Literal["created", "reused", "checked"]
 RegionLevel = Literal["예비특보", "적조주의보", "적조경보", "해제"]
 GovernmentLevel = Literal["관심", "주의", "경계", "심각"]
+Level = TypeVar("Level", RegionLevel, GovernmentLevel)
 NonEmptyText = Annotated[str, StringConstraints(min_length=1, max_length=1000)]
 
 
@@ -43,7 +51,7 @@ class Evidence(Contract):
     summary: str
 
 
-class Alert[Level: (RegionLevel, GovernmentLevel)](Contract):
+class Alert(Contract, Generic[Level]):  # noqa: UP046 - shared with the IBM tool runtime
     previous: Level
     current: Level
     effective_at: AwareDatetime
@@ -81,3 +89,10 @@ class Result(Request, Assessment):
     mode: ExecutionMode
     draft: Draft | None
     ledger: LedgerStatus
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedReview:
+    request: Request
+    assessment: Assessment
+    draft: Draft | None
