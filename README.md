@@ -35,4 +35,15 @@ PR에 변경 내용과 확인 결과를 기록하고, 입출력이나 환경변�
 
 ## 개발 상태
 
-기획과 저장소 초기 설정 단계입니다. 화면은 Streamlit, 승인함은 Python과 SQLite, 에이전트는 IBM watsonx Orchestrate를 사용하도록 설계했습니다. 교육 계정 연결에 문제가 있을 때는 같은 시연 데이터를 사용하는 로컬 재현 경로를 준비합니다.
+가막만 대표 사례는 보관한 공식 발표와 가상 승인본으로 로컬에서 실행할 수 있습니다. 두 발표의 원문과 시연 중 조회 가능한 자료는 `data/gamak-archive.json`에 있습니다. 웹 페이지에 게시 분 단위 정보가 없어 즉시 보도자료의 정부 발령시각을 시연 자료의 조회 가능시각으로 사용합니다.
+
+### 화면 없이 대표 사례 실행
+
+```sh
+uv sync
+uv run python -m gamak_demo examples/gamak-update.request.json --db data/local/cli-rehearsal.sqlite3
+uv run python -m gamak_demo examples/gamak-update.request.json --db data/local/cli-rehearsal.sqlite3
+uv run pytest -q
+```
+
+빈 DB에서 동일 요청을 실행하면 승인함은 `0 → 1 → 1`이 되고 두 응답의 초안 ID가 같습니다. 새 리허설을 시작할 때는 아직 사용하지 않은 DB 파일명을 지정하세요.

@@ -1,0 +1,59 @@
+{
+  "documents": [
+    {
+      "source": {
+        "id": "mof-62891",
+        "title": "적조 위기경보 ‘주의’ 단계 발령",
+        "publisher": "해양수산부",
+        "published_at": "2025-08-26T16:00:00+09:00",
+        "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62891&menuSeq=971",
+        "summary": "8월 26일 가막만에 적조 예비특보가 발표됐고 정부는 16시부터 위기경보 ‘주의’를 발령했다."
+      },
+      "regions": [
+        "가막만"
+      ],
+      "regional_alert": {
+        "value": "예비특보",
+        "effective_at": "2025-08-26T16:00:00+09:00"
+      },
+      "government_alert": {
+        "value": "주의",
+        "effective_at": "2025-08-26T16:00:00+09:00"
+      }
+    },
+    {
+      "source": {
+        "id": "mof-62990",
+        "title": "적조 위기경보 ‘경계’ 단계 발령",
+        "publisher": "해양수산부",
+        "published_at": "2025-08-29T16:00:00+09:00",
+        "url": "https://www.mof.go.kr/doc/ko/selectDoc.do?bbsSeq=10&docSeq=62990&menuSeq=971",
+        "summary": "8월 29일 14시부터 가막만에 적조주의보가 적용됐고 정부는 16시부터 위기경보를 ‘경계’로 높였다."
+      },
+      "regions": [
+        "가막만"
+      ],
+      "regional_alert": {
+        "value": "적조주의보",
+        "effective_at": "2025-08-29T14:00:00+09:00"
+      },
+      "government_alert": {
+        "value": "경계",
+        "effective_at": "2025-08-29T16:00:00+09:00"
+      }
+    }
+  ],
+  "approved_notices": [
+    {
+      "id": "gamak-2025-08-26-demo",
+      "region": "가막만",
+      "approved_at": "2025-08-26T16:15:00+09:00",
+      "evidence_ids": [
+        "mof-62891"
+      ],
+      "regional_alert": "예비특보",
+      "government_alert": "주의",
+      "text": "[시연용 가상 승인본] 가막만에 적조 예비특보가 발표됐습니다. 정부 적조 위기경보는 ‘주의’입니다."
+    }
+  ]
+}
