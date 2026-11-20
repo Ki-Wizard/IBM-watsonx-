@@ -6,7 +6,7 @@ from typing import Literal, NewType
 
 from pydantic import AwareDatetime, ValidationError
 
-from .contract import Contract, EvidenceId, GovernmentLevel, RegionLevel, Request
+from .contract import Assessment, Contract, EvidenceId, GovernmentLevel, RegionLevel, Request
 from .evidence import (
     ARCHIVE,
     GAMAK_NAMES,
@@ -42,6 +42,19 @@ class Retrieval(Contract):
     status: RetrievalStatus
     approved: ApprovedLevels | None = None
     passages: tuple[Passage, ...] = ()
+
+
+def include_nifs_passage(passages: tuple[Passage, ...], assessment: Assessment) -> tuple[Passage, ...]:
+    """Add the regional passage that the verified API decision actually used."""
+    alert = assessment.regional_alert
+    for source in assessment.evidence:
+        if alert and source.publisher == "국립수산과학원" and source.id == alert.evidence_id:
+            return (*passages, Passage(
+                id=PassageId(f"{source.id}-regional"), source_id=source.id, topic="regional",
+                text=source.summary, location="적조속보 상세 · 특보 해제 대상",
+                level="해제", published_at=source.published_at, effective_at=alert.effective_at,
+            ))
+    return passages
 
 
 def retrieve(request: Request, archive_path: Path = ARCHIVE) -> Retrieval:

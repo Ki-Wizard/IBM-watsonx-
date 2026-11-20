@@ -3,7 +3,7 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $stageRoot = Join-Path $repoRoot ('output/watsonx-package/' + [Guid]::NewGuid().ToString('N'))
 $allowed = @(
   'gamak_demo/__init__.py', 'gamak_demo/agent_contract.py', 'gamak_demo/contract.py',
-  'gamak_demo/evidence.py', 'gamak_demo/ledger.py', 'gamak_demo/service.py',
+  'gamak_demo/evidence.py', 'gamak_demo/ledger.py', 'gamak_demo/service.py', 'gamak_demo/rag.py', 'gamak_demo/nifs.py',
   'data/gamak-archive.json', 'watsonx/gamak_evidence_tool.py'
 )
 foreach ($item in $allowed) {
@@ -12,7 +12,7 @@ foreach ($item in $allowed) {
   Copy-Item -LiteralPath (Join-Path $repoRoot $item) -Destination $dest
 }
 $requirements = Join-Path $stageRoot 'requirements.txt'
-Set-Content -LiteralPath $requirements -Value 'pydantic>=2.11,<3' -Encoding utf8NoBOM
+Set-Content -LiteralPath $requirements -Value @('pydantic>=2.11,<3', 'httpx2[http2,brotli,zstd]>=2,<3') -Encoding utf8NoBOM
 $teamPrompt = Get-Content -LiteralPath (Join-Path $repoRoot 'prompts/agent-system-prompt.md') -Raw
 $principles = [regex]::Match($teamPrompt, '(?ms)^## 1\.[^\r\n]*\r?\n(.*?)^## 2\.')
 if (!$principles.Success) { throw 'Cannot locate the team prompt principles' }

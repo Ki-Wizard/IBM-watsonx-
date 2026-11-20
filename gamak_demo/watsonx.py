@@ -22,6 +22,7 @@ from .agent_contract import (
     execution_code,
 )
 from .contract import Request, Result
+from .ledger import ReviewNote
 from .service import finalize, prepare
 
 IAM: Final = "https://iam.cloud.ibm.com/identity/token"
@@ -199,7 +200,7 @@ def run_agent(request_text: str, settings: Settings) -> AgentRun:
         raise WatsonxProblem(message) from None
 
 
-def review_watsonx(request: Request, db: Path) -> Result:
+def review_watsonx(request: Request, db: Path, *, note: ReviewNote | None = None) -> Result:
     """Write a draft only after validating the IBM JSON response and real tool trace."""
     settings = Settings.from_env()
     prepared = prepare(request)
@@ -216,4 +217,4 @@ def review_watsonx(request: Request, db: Path) -> Result:
     except ValidationError:
         message = "IBM 응답이 공통 JSON 형식과 일치하지 않습니다."
         raise WatsonxProblem(message) from None
-    return finalize(replace(prepared, assessment=verified.assessment), db, "watsonx")
+    return finalize(replace(prepared, assessment=verified.assessment), db, "watsonx", note=note)

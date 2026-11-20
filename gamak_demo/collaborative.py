@@ -19,7 +19,9 @@ from .collaboration_contract import (
     retrieval_code,
 )
 from .contract import Assessment, Request, Result
-from .rag import Passage, PassageId, Retrieval, retrieve
+from .nifs import NifsReport, is_release_question, release_confirmed
+from .rag import Passage, PassageId, Retrieval, include_nifs_passage, retrieve
+from .ledger import ReviewNote
 from .service import finalize, prepare
 from .watsonx import AgentRun, Settings, Step, WatsonxProblem, proposal_json, run_agent
 
@@ -35,6 +37,7 @@ class Collaboration:
     thread_id: UUID
     trace_id: str | None
     citations: tuple[Passage, ...]
+    nifs: NifsReport | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,7 +80,9 @@ def verified_citations(
     return tuple(indexed[item] for item in proposed if item is not None)
 
 
-def verify_run(run: AgentRun, expected: SearchReply, assessment: Assessment) -> Collaboration:
+def verify_run(
+    run: AgentRun, expected: SearchReply, assessment: Assessment, *, request: Request | None = None,
+) -> Collaboration:
     steps = tuple(
         step
         for message in run.history if message.role == "assistant"
@@ -96,12 +101,21 @@ def verify_run(run: AgentRun, expected: SearchReply, assessment: Assessment) -> 
     except ValidationError:
         message = "IBM 협업 응답이 판정과 인용을 검증할 수 있는 형식이 아닙니다."
         raise UnverifiedRun(message) from None
-    if actual != expected:
+    if actual.retrieval != expected.retrieval or actual.execution_code != expected.execution_code:
         message = "IBM 검색 이력의 공식 원문 또는 실행 검증 코드가 일치하지 않습니다."
         raise UnverifiedRun(message)
+    if actual.nifs is not None:
+        if request is None or not is_release_question(request.question):
+            raise UnverifiedRun("IBM 이력의 적조속보 조회가 요청 범위와 일치하지 않습니다.")
+        if actual.nifs_release_confirmed != release_confirmed(actual.nifs, request):
+            raise UnverifiedRun("IBM 이력의 적조속보 공개 시점 또는 해제 범위가 일치하지 않습니다.")
+        assessment = prepare(request, nifs=actual.nifs).assessment
+    elif actual.nifs_release_confirmed is not None:
+        raise UnverifiedRun("IBM 이력에서 적조속보 조회 근거를 확인하지 못했습니다.")
+    passages = include_nifs_passage(actual.retrieval.passages, assessment)
     return Collaboration(
         run.chat.thread_id, run.chat.trace_id,
-        verified_citations(proposal, actual.retrieval.passages, assessment),
+        verified_citations(proposal, passages, assessment), actual.nifs,
     )
 
 
@@ -112,11 +126,12 @@ def _verified_attempt(
     request_text = json.dumps({**request.model_dump(mode="json"), "challenge": challenge}, ensure_ascii=False)
     run = run_agent(request_text, settings)
     expected = SearchReply(retrieval=retrieval, execution_code=retrieval_code(challenge))
-    return verify_run(run, expected, assessment)
+    return verify_run(run, expected, assessment, request=request)
 
 
 def review_collaborative(
     request: Request, db: Path, *, previous: CollaborativeReview | None = None,
+    note: ReviewNote | None = None,
 ) -> CollaborativeReview:
     """Ask the supervisor for a decision grounded in an observed collaborator search."""
     prepared = prepare(request)
@@ -124,12 +139,16 @@ def review_collaborative(
     if (
         previous is not None and request == previous.request
         and prepared.assessment == previous.assessment and retrieval == previous.retrieval
+        and previous.collaboration.nifs is None
     ):
-        return replace(previous, result=finalize(prepared, db, "watsonx"), reused=True)
+        return replace(previous, result=finalize(prepared, db, "watsonx", note=note), reused=True)
 
     settings = replace(Settings.from_env(), agent_name=SUPERVISOR)
     try:
         trace = _verified_attempt(request, settings, retrieval, prepared.assessment)
     except UnverifiedRun:
         trace = _verified_attempt(request, settings, retrieval, prepared.assessment)
-    return CollaborativeReview(finalize(prepared, db, "watsonx"), trace, request, prepared.assessment, retrieval)
+    prepared = prepare(request, nifs=trace.nifs) if trace.nifs else prepared
+    return CollaborativeReview(
+        finalize(prepared, db, "watsonx", note=note), trace, request, prepared.assessment, retrieval,
+    )

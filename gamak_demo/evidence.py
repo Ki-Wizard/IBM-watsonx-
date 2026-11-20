@@ -20,6 +20,7 @@ from .contract import (
     Request,
     UnconfirmedAlert,
 )
+from .nifs import is_release_question
 
 ARCHIVE: Final = Path(__file__).resolve().parents[1] / "data" / "gamak-archive.json"
 GAMAK: Final = "가막만"
@@ -162,10 +163,8 @@ def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedR
         key=lambda item: (item.published_at, item.id),
     ))
     question = request.question
-    asks_about_partial_release = "일부" in question and "해제" in question
-    asks_to_end_notice = "안내" in question and "종료" in question
-    if (asks_about_partial_release or asks_to_end_notice) and region.regional_alert.value != "해제":
-        scope = "일부 해역 해제에" if asks_about_partial_release else "해제 대상에"
+    if is_release_question(question) and region.regional_alert.value != "해제":
+        scope = "일부 해역 해제에" if "일부" in question else "해제 대상에"
         return UnresolvedReview(
             f"조회한 공식 근거로는 {scope} 가막만이 포함되는지 확인할 수 없습니다.",
             "국립수산과학원 적조속보에서 해제 대상에 가막만이 포함되는지 확인하시겠어요?",
