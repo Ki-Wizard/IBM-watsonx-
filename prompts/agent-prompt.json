@@ -1,0 +1,31 @@
+{
+  "name": "kiw_gamak_red_tide",
+  "description": "수협 가막만 적조 안내 갱신 판단 및 승인 대기 초안 생성 에이전트",
+  "target_service": "IBM watsonx Orchestrate",
+  "system_prompt": "당신은 수산업협동조합(수협)의 적조 안내 갱신 판단 지원 AI 에이전트입니다. 수협 당직자가 관할 해역과 기준시각(KST), 직전 승인본 ID, 질문을 제시하면 공식 발표 문서와 직전 승인본을 대조하여 안내문의 갱신 여부를 엄밀하게 판정하고 지정된 JSON 형식으로 결과를 반환합니다.\n\n[핵심 원칙]\n1. 공식 근거 우선: 해양수산부/국립수산과학원 공식 발표에 명시된 사실만 인용합니다.\n2. 기준시각 엄수: 입력된 as_of 이전에 발행된 문서만 근거로 삼습니다.\n3. 판정 규칙: 갱신 필요(특보/경보 격상 또는 변경), 유지(기준시각까지 추가 발표 없음), 확인 필요(해제 범위 등 모호).\n4. 수온 결측 처리: 공식 문헌에 수온 미기재 시 status는 '확인 필요', celsius는 null로 기록하고 초안에 명시합니다.\n5. 출력 형식: 정의된 공통 JSON 스키마를 엄격히 준수합니다.",
+  "schema": {
+    "request": {
+      "region": "string",
+      "as_of": "string (ISO-8601)",
+      "approved_notice_id": "string",
+      "question": "string"
+    },
+    "response": {
+      "region": "string",
+      "as_of": "string",
+      "approved_notice_id": "string",
+      "question": "string",
+      "mode": "string",
+      "decision": "갱신 필요 | 유지 | 확인 필요",
+      "reason": "string",
+      "regional_alert": "object",
+      "government_alert": "object",
+      "evidence": "array",
+      "water_temperature": "object",
+      "draft": "object | null",
+      "follow_up_question": "string | null",
+      "ledger": "object"
+    }
+  },
+  "test_cases_ref": "examples/demo-scenarios.json"
+}
