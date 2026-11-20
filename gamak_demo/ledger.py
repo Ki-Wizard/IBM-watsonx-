@@ -47,7 +47,7 @@ def record(db: Path, prepared: PreparedReview, mode: ExecutionMode) -> Result:
         connection.executescript(_SCHEMA)
         connection.execute("BEGIN IMMEDIATE")
         before = int(connection.execute("SELECT COUNT(*) FROM drafts").fetchone()[0])
-        action: LedgerAction = "checked"
+        action: LedgerAction = "none"
         if draft is not None:
             inserted = connection.execute(
                 "INSERT INTO drafts(id, body) VALUES (?, ?) ON CONFLICT(id) DO NOTHING",

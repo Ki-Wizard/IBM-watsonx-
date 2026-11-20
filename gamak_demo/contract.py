@@ -19,7 +19,7 @@ EvidenceId = NewType("EvidenceId", str)
 DraftId = NewType("DraftId", str)
 Decision = Literal["갱신 필요", "유지", "확인 필요"]
 ExecutionMode = Literal["local", "watsonx"]
-LedgerAction = Literal["created", "reused", "checked"]
+LedgerAction = Literal["created", "reused", "none"]
 RegionLevel = Literal["예비특보", "적조주의보", "적조경보", "해제"]
 GovernmentLevel = Literal["관심", "주의", "경계", "심각"]
 Level = TypeVar("Level", RegionLevel, GovernmentLevel)
@@ -58,6 +58,17 @@ class Alert(Contract, Generic[Level]):  # noqa: UP046 - shared with the IBM tool
     evidence_id: EvidenceId
 
 
+class UnconfirmedAlert(Contract, Generic[Level]):  # noqa: UP046 - shared with the IBM tool runtime
+    previous: Level
+    current: Literal["확인 필요"] = "확인 필요"
+    effective_at: None = None
+    evidence_id: EvidenceId
+
+
+RegionalAlert = Alert[RegionLevel] | UnconfirmedAlert[RegionLevel]
+GovernmentAlert = Alert[GovernmentLevel] | UnconfirmedAlert[GovernmentLevel]
+
+
 class WaterTemperature(Contract):
     status: Literal["확인 필요"] = "확인 필요"
     celsius: None = None
@@ -66,8 +77,8 @@ class WaterTemperature(Contract):
 class Assessment(Contract):
     decision: Decision
     reason: str
-    regional_alert: Alert[RegionLevel] | None = None
-    government_alert: Alert[GovernmentLevel] | None = None
+    regional_alert: RegionalAlert | None = None
+    government_alert: GovernmentAlert | None = None
     evidence: tuple[Evidence, ...] = ()
     water_temperature: WaterTemperature = WaterTemperature()
     follow_up_question: str | None = None

@@ -14,10 +14,9 @@ from pydantic import ValidationError
 
 from gamak_demo.contract import (
     KST,
-    Alert,
-    GovernmentLevel,
+    GovernmentAlert,
     NoticeId,
-    RegionLevel,
+    RegionalAlert,
     Request,
     Result,
 )
@@ -28,12 +27,13 @@ from gamak_demo.watsonx import WatsonxProblem, review_watsonx
 DEFAULT_ID: Final = NoticeId("gamak-2025-08-26-demo")
 
 
-def _show_alert(label: str, alert: Alert[RegionLevel] | Alert[GovernmentLevel]) -> None:
+def _show_alert(label: str, alert: RegionalAlert | GovernmentAlert) -> None:
     with st.container(border=True):
         st.markdown(f"**{label}**")
         st.markdown(f"{alert.previous} → **{alert.current}**")
-        issued = alert.effective_at.astimezone(KST).strftime("%m월 %d일 %H:%M 발령")
-        st.html(f'<p class="gamak-caption">{issued}</p>')
+        if alert.effective_at is not None:
+            issued = alert.effective_at.astimezone(KST).strftime("%m월 %d일 %H:%M 발령")
+            st.html(f'<p class="gamak-caption">{issued}</p>')
 
 
 def _show_result(result: Result) -> None:
@@ -46,7 +46,7 @@ def _show_result(result: Result) -> None:
                 note = "초안 1건 등록"
             case "reused":
                 note = "기존 초안 재사용"
-            case "checked":
+            case "none":
                 note = "확인 이력 기록"
             case _ as unreachable:
                 assert_never(unreachable)

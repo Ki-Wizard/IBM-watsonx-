@@ -37,7 +37,7 @@
 - **참조 파일**: [examples/test-cases/case1-update.request.json](../examples/test-cases/case1-update.request.json), [examples/test-cases/case1-update.expected.json](../examples/test-cases/case1-update.expected.json)
 
 ### Case 2. 유지 (Maintain)
-- **상황**: 2025-08-26 16:00 승인 직후인 17:00 시점에 동일 안내 사용 가능 여부 질의.
+- **상황**: 2025-08-26 가상 승인본(16:15 승인)을 17:00 시점에도 사용할 수 있는지 질의.
 - **판정**: `유지`
 - **근거**: 해양수산부 8월 26일 발표(`mof-62891`). 기준시각(17:00)까지 추가 발표가 없으므로 상태 변경 없음.
 - **초안 및 후속 조치**: 초안 생성 없음 (`draft: null`), 확인 질문 없음 (`follow_up_question: null`).
@@ -50,7 +50,7 @@
 - **참조 파일**: [examples/test-cases/case3-repeat.request.json](../examples/test-cases/case3-repeat.request.json), [examples/test-cases/case3-repeat.expected.json](../examples/test-cases/case3-repeat.expected.json)
 
 ### Case 4. 해역 불명 (Ambiguous Region Scope)
-- **상황**: 남해안 일부 해역 특보 해제 발표가 있으나, 발표문 상에 가막만의 포함 여부가 불명확한 상태.
+- **상황**: 당직자가 남해안 일부 해역 특보 해제를 들었다고 질의합니다. 시연에 포함된 8월 29일 자료로는 해제 발표나 가막만의 포함 여부를 확인할 수 없습니다.
 - **판정**: `확인 필요`
 - **근거 및 후속 질문**: 공식 문헌(`mof-62990`)에서 가막만 해제 여부 확정 불가. 당직자에게 국립수산과학원 적조속보 상세 경계 구역 확인을 유도하는 후속 질문(`follow_up_question`) 제시.
 - **초안**: 자동 초안 발송 보류 (`draft: null`).
@@ -69,3 +69,5 @@
 
 전체 시스템 프롬프트 전문은 [prompts/agent-system-prompt.md](../prompts/agent-system-prompt.md)에 위치합니다.
 에이전트는 엄격하게 Grounding(공식 근거 일치), Temporal Cutoff(기준시각 준수), Schema Validation(공통 JSON 포맷)을 준수하도록 설계되었습니다.
+
+배포 스크립트는 시스템 프롬프트의 핵심 원칙을 Orchestrate 에이전트의 지침에 포함합니다. 에이전트는 도구 조회 후 판정과 근거 ID를 반환하며, SQLite 확인 이력과 최종 공통 JSON은 백엔드에서 확정합니다.

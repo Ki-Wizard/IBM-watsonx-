@@ -13,9 +13,18 @@ foreach ($item in $allowed) {
 }
 $requirements = Join-Path $stageRoot 'requirements.txt'
 Set-Content -LiteralPath $requirements -Value 'pydantic>=2.11,<3' -Encoding utf8NoBOM
+$teamPrompt = Get-Content -LiteralPath (Join-Path $repoRoot 'prompts/agent-system-prompt.md') -Raw
+$principles = [regex]::Match($teamPrompt, '(?ms)^## 1\.[^\r\n]*\r?\n(.*?)^## 2\.')
+if (!$principles.Success) { throw 'Cannot locate the team prompt principles' }
+$promptLines = $principles.Groups[1].Value.Trim() -split '\r?\n'
+$indented = ($promptLines | ForEach-Object { '  ' + $_ }) -join "`n"
+$template = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'gamak_agent.yaml') -Raw
+$agentFile = Join-Path $stageRoot 'gamak_agent.yaml'
+$template.Replace('instructions: |', "instructions: |`n$indented") |
+  Set-Content -LiteralPath $agentFile -Encoding utf8NoBOM
 orchestrate tools import -k python -f (Join-Path $stageRoot 'watsonx/gamak_evidence_tool.py') -p $stageRoot -r $requirements
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-orchestrate agents import -f (Join-Path $PSScriptRoot 'gamak_agent.yaml')
+orchestrate agents import -f $agentFile
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 orchestrate agents deploy -n kiw_gamak_red_tide
 exit $LASTEXITCODE

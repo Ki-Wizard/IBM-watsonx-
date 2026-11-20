@@ -29,8 +29,8 @@ def _assess(request: Request, official: OfficialReview) -> PreparedReview:
     government = official.government_alert
     changes = [
         label for label, changed in (
-            ("해역 특보", regional.previous != regional.current),
-            ("정부 위기경보", government.previous != government.current),
+            ("해역 특보", official.regional_changed),
+            ("정부 위기경보", official.government_changed),
         ) if changed
     ]
     reason = "직전 승인본 이후 해역 특보와 정부 위기경보의 변경이 확인되지 않았습니다."
@@ -72,9 +72,13 @@ def prepare(request: Request, archive: Path = ARCHIVE) -> PreparedReview:
     match lookup(request, archive):
         case OfficialReview() as official:
             return _assess(request, official)
-        case UnresolvedReview(reason=reason, question=question):
+        case UnresolvedReview() as unresolved:
             return PreparedReview(
-                request, Assessment(decision="확인 필요", reason=reason, follow_up_question=question),
+                request, Assessment(
+                    decision="확인 필요", reason=unresolved.reason, follow_up_question=unresolved.question,
+                    regional_alert=unresolved.regional_alert, government_alert=unresolved.government_alert,
+                    evidence=unresolved.evidence,
+                ),
                 None,
             )
         case _ as unreachable:

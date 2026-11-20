@@ -52,8 +52,23 @@
         "mof-62891"
       ],
       "regional_alert": "예비특보",
+      "regional_effective_at": "2025-08-26T16:00:00+09:00",
       "government_alert": "주의",
+      "government_effective_at": "2025-08-26T16:00:00+09:00",
       "text": "[시연용 가상 승인본] 가막만에 적조 예비특보가 발표됐습니다. 정부 적조 위기경보는 ‘주의’입니다."
+    },
+    {
+      "id": "gamak-2025-08-29-demo",
+      "region": "가막만",
+      "approved_at": "2025-08-29T16:20:00+09:00",
+      "evidence_ids": [
+        "mof-62990"
+      ],
+      "regional_alert": "적조주의보",
+      "regional_effective_at": "2025-08-29T14:00:00+09:00",
+      "government_alert": "경계",
+      "government_effective_at": "2025-08-29T16:00:00+09:00",
+      "text": "[시연용 가상 승인본] 가막만에 적조주의보가 발령됐습니다. 정부 적조 위기경보는 ‘경계’입니다."
     }
   ]
 }

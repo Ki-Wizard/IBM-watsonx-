@@ -17,6 +17,7 @@ from .contract import (
     NoticeId,
     RegionLevel,
     Request,
+    UnconfirmedAlert,
 )
 
 ARCHIVE: Final = Path(__file__).resolve().parents[1] / "data" / "gamak-archive.json"
@@ -42,7 +43,9 @@ class ApprovedNotice(Contract):
     approved_at: AwareDatetime
     evidence_ids: tuple[EvidenceId, ...]
     regional_alert: RegionLevel
+    regional_effective_at: AwareDatetime
     government_alert: GovernmentLevel
+    government_effective_at: AwareDatetime
     text: str
 
 
@@ -56,12 +59,17 @@ class OfficialReview:
     regional_alert: Alert[RegionLevel]
     government_alert: Alert[GovernmentLevel]
     evidence: tuple[Evidence, ...]
+    regional_changed: bool
+    government_changed: bool
 
 
 @dataclass(frozen=True, slots=True)
 class UnresolvedReview:
     reason: str
     question: str
+    regional_alert: UnconfirmedAlert[RegionLevel] | None = None
+    government_alert: UnconfirmedAlert[GovernmentLevel] | None = None
+    evidence: tuple[Evidence, ...] = ()
 
 
 def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedReview:
@@ -115,6 +123,23 @@ def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedR
         )
 
     used = {*approved.evidence_ids, region.source.id, government.source.id}
+    evidence = tuple(sorted(
+        (sources[key] for key in used),
+        key=lambda item: (item.published_at, item.id),
+    ))
+    if "일부" in request.question and "해제" in request.question and region.regional_alert.value != "해제":
+        return UnresolvedReview(
+            "조회한 공식 근거로는 일부 해역 해제에 가막만이 포함되는지 확인할 수 없습니다.",
+            "국립수산과학원 적조속보에서 해제 대상에 가막만이 포함되는지 확인하시겠어요?",
+            regional_alert=UnconfirmedAlert[RegionLevel](
+                previous=approved.regional_alert, evidence_id=region.source.id,
+            ),
+            government_alert=UnconfirmedAlert[GovernmentLevel](
+                previous=approved.government_alert, evidence_id=government.source.id,
+            ),
+            evidence=evidence,
+        )
+
     return OfficialReview(
         regional_alert=Alert[RegionLevel](
             previous=approved.regional_alert, current=region.regional_alert.value,
@@ -124,8 +149,13 @@ def lookup(request: Request, archive_path: Path) -> OfficialReview | UnresolvedR
             previous=approved.government_alert, current=government.government_alert.value,
             effective_at=government.government_alert.effective_at, evidence_id=government.source.id,
         ),
-        evidence=tuple(sorted(
-            (sources[key] for key in used),
-            key=lambda item: (item.published_at, item.id),
-        )),
+        evidence=evidence,
+        regional_changed=(
+            region.regional_alert.value != approved.regional_alert
+            or region.regional_alert.effective_at != approved.regional_effective_at
+        ),
+        government_changed=(
+            government.government_alert.value != approved.government_alert
+            or government.government_alert.effective_at != approved.government_effective_at
+        ),
     )

@@ -5,6 +5,8 @@ description: 가막만 적조 안내를 기준시각의 공식 발표와 비교�
 llm: groq/openai/gpt-oss-120b
 style: react_core
 instructions: |
+  수협 당직자의 적조 안내 갱신 판단을 지원한다.
+  공식 근거, 기준시각, 수온 처리 원칙을 공식 근거 도구 결과 확인에 적용한다.
   입력은 request_json과 challenge를 가진 JSON 객체다.
   kiw_gamak_official_evidence 도구를 정확히 한 번 호출한다.
   request_json 문자열과 challenge 문자열을 있는 그대로 도구에 전달한다.
