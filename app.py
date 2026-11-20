@@ -9,16 +9,20 @@ import streamlit as st
 from dotenv import load_dotenv
 from pydantic import SecretStr, ValidationError
 
+from gamak_demo.cloud_store import sync_result_to_cloudant
 from gamak_demo.collaborative import CollaborativeReview, review_collaborative
 from gamak_demo.contract import Request, Result
 from gamak_demo.demo import compare_cutoffs
 from gamak_demo.demo_ui import kst_label, request_inputs, select_database, show_comparison
 from gamak_demo.evidence import ARCHIVE, GAMAK_NAMES, read_archive
+from gamak_demo.hybrid_rag import search_manual
 from gamak_demo.ledger import ReviewNote, read_ledger
 from gamak_demo.nifs import KEY_ENV, NifsChecked, NifsUnavailable, is_release_question, lookup_release
 from gamak_demo.report_ui import (
     citations_for,
+    show_ai_governance_and_channels,
     show_assessment,
+    show_cloud_sidebar,
     show_notice_comparison,
     show_timeline,
     show_workflow,
@@ -26,6 +30,7 @@ from gamak_demo.report_ui import (
 from gamak_demo.review_ui import show_follow_up, show_inbox, show_ledger_change
 from gamak_demo.service import review
 from gamak_demo.watsonx import WatsonxProblem, review_watsonx
+from gamak_demo.watsonx_ai import evaluate_groundedness, generate_channel_notices
 
 
 def _run_review(request: Request, db: Path, mode: str, *, note: ReviewNote | None = None) -> bool:
@@ -55,6 +60,22 @@ def _run_review(request: Request, db: Path, mode: str, *, note: ReviewNote | Non
         st.error("승인함을 열거나 저장할 수 없습니다. DB 경로를 확인해 주세요.")
         return False
     st.session_state.update(result=result, review_request=request)
+    levels = tuple(
+        alert.current
+        for alert in (result.regional_alert, result.government_alert)
+        if alert is not None and alert.current != "확인 필요"
+    )
+    manual_hits = search_manual(request.question, levels=levels)
+    guidance = manual_hits[0].entry.content if manual_hits else None
+    notices = generate_channel_notices(result, manual_guidance=guidance)
+    governance = evaluate_groundedness(result, notices)
+    cloud_sync = sync_result_to_cloudant(result, note=note, governance=governance)
+    st.session_state.update(
+        manual_hits=manual_hits,
+        channel_notices=notices,
+        governance_report=governance,
+        cloud_sync=cloud_sync,
+    )
     return True
 
 
@@ -104,8 +125,12 @@ def main() -> None:
     load_dotenv(Path(os.getenv("GAMAK_ENV_FILE", ".env")))
     mode = os.getenv("GAMAK_MODE", "local").lower()
     db = select_database(Path(os.getenv("GAMAK_DB_PATH", "data/local/gamak.sqlite3")).resolve())
+    show_cloud_sidebar()
     if db != st.session_state.get("active_db"):
-        for key in ("result", "collaborative_review", "fallback", "review_request", "comparison", "nifs"):
+        for key in (
+            "result", "collaborative_review", "fallback", "review_request", "comparison", "nifs",
+            "manual_hits", "channel_notices", "governance_report", "cloud_sync",
+        ):
             st.session_state.pop(key, None)
         st.session_state.active_db = db
 
@@ -155,6 +180,12 @@ def main() -> None:
             show_assessment(result, citations_for(reviewed, result, collaboration))
             if draft:
                 show_notice_comparison(archive, reviewed, result, draft)
+            show_ai_governance_and_channels(
+                st.session_state.get("channel_notices"),
+                st.session_state.get("governance_report"),
+                st.session_state.get("manual_hits", ()),
+                st.session_state.get("cloud_sync"),
+            )
             if (note := show_follow_up(result)) and _run_review(reviewed, db, mode, note=note):
                 st.rerun()
     with timeline_tab:

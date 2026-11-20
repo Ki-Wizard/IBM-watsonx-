@@ -60,3 +60,26 @@ uv run pytest -q
 - [보관 발표와 가상 승인본](data/gamak-archive.json)
 
 변경 작업은 최신 `main`에서 브랜치를 만들어 진행합니다. PR에 변경과 검증 결과를 기록하고 **Squash and merge**로 병합합니다.
+
+## 5. watsonx.ai · 거버넌스 · IBM Cloud 확장
+
+```mermaid
+flowchart LR
+  User["수협 당직자 (Streamlit UI)"] --> CE["IBM Cloud Code Engine"]
+  CE --> WXO["watsonx Orchestrate (2-Agent 협업)"]
+  WXO --> NIFS["국립수산과학원 OpenAPI"]
+  CE --> WXAI["watsonx.ai (Granite 다중 채널 초안 + 임베딩 RAG)"]
+  WXAI --> GOV["Groundedness 거버넌스 검증"]
+  CE --> DB["SQLite + IBM Cloudant (공용 승인함)"]
+  CE --> COS["IBM Cloud Object Storage"]
+```
+
+- **watsonx.ai 다중 채널 안내문 & 임베딩 RAG**: `.env`에 `WATSONX_AI_API_KEY`, `WATSONX_AI_PROJECT_ID`를 설정하면 `ibm/granite-3-8b-instruct`로 어업인 SMS·유관기관 공문·홈페이지 공지문을 생성하고, `intfloat/multilingual-e5-large` 임베딩 기반 대응 매뉴얼(`data/gamak-manual.json`)을 검색합니다. 미설정 시 로컬 폴백 엔진이 동작합니다.
+- **거버넌스 검증(Groundedness)**: 해역명, 해역 특보 단계, 정부 위기경보 단계 일치 여부와 미확인 수온 환각 차단을 자동 점검해 일치율(%)을 표시합니다.
+- **IBM Cloud Code Engine & Cloudant**:
+  - `CLOUDANT_URL`, `CLOUDANT_APIKEY` 설정 시 로컬 SQLite와 함께 IBM Cloudant 공용 승인함으로 자동 동기화됩니다.
+  - 컨테이너 배포는 저장소 루트에서 PowerShell로 실행합니다:
+
+```powershell
+./ibmcloud/deploy-code-engine.ps1
+```

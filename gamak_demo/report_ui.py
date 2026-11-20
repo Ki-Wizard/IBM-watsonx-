@@ -8,6 +8,7 @@ from typing import assert_never
 
 import streamlit as st
 
+from .cloud_store import CloudSyncStatus, cloud_health_summary
 from .collaborative import CollaborativeReview
 from .contract import (
     Assessment,
@@ -21,7 +22,9 @@ from .contract import (
 )
 from .demo_ui import kst_label
 from .evidence import GAMAK, GAMAK_NAMES, Announcement, ApprovedNotice, Archive, find_approval
+from .hybrid_rag import HybridHit
 from .rag import Passage, include_nifs_passage, retrieve
+from .watsonx_ai import ChannelNotices, GovernanceReport
 
 @dataclass(frozen=True, slots=True)
 class Citation:
@@ -244,3 +247,56 @@ def show_timeline(archive: Archive, request: Request, result: Result | None) -> 
                             st.caption("등록일을 기준으로 다음 날 00시부터 반영 · 발령시각 원문 미기재")
                             st.write("판정에 반영")
                             st.markdown(f"[적조속보 원문]({source.url})")
+
+
+def show_cloud_sidebar() -> None:
+    """Display IBM watsonx and IBM Cloud service connection status in the sidebar."""
+    with st.sidebar:
+        st.divider()
+        st.subheader("IBM watsonx · Cloud 연동")
+        for svc in cloud_health_summary():
+            icon = "🟢" if svc.configured else "⚪"
+            st.caption(f"{icon} **{svc.name}** · {svc.detail}")
+
+
+def show_ai_governance_and_channels(
+    notices: ChannelNotices | None,
+    governance: GovernanceReport | None,
+    manual_hits: tuple[HybridHit, ...],
+    cloud_sync: CloudSyncStatus | None,
+) -> None:
+    """Render watsonx.ai multi-channel outputs, Governance score, and Hybrid RAG guidance."""
+    if notices is None or governance is None:
+        return
+
+    st.subheader("watsonx.ai 다중 채널 안내문 & 거버넌스 검증")
+    col_score, col_risk, col_model = st.columns(3)
+    col_score.metric("근거 일치율 (Groundedness)", f"{governance.groundedness_score:.1f}%")
+    col_risk.metric("환각 위험도", governance.hallucination_risk)
+    col_model.metric("생성 엔진", notices.model_id if notices.used_watsonx_ai else "로컬 폴백 템플릿")
+
+    if cloud_sync and cloud_sync.status == "synced":
+        st.success(cloud_sync.detail)
+
+    sms_tab, memo_tab, public_tab, gov_tab = st.tabs(
+        ["어업인 SMS", "유관기관 공문", "홈페이지 공지", "거버넌스 · 매뉴얼 RAG"],
+    )
+    with sms_tab:
+        st.text_area("어업인 발송용 SMS/알림톡", value=notices.sms_alert, height=110, key="wx_sms")
+    with memo_tab:
+        st.text_area("지자체·해수부 보고용 공문 초안", value=notices.official_memo, height=170, key="wx_memo")
+    with public_tab:
+        st.text_area("수협 홈페이지·SNS 공지문", value=notices.public_notice, height=130, key="wx_public")
+    with gov_tab:
+        st.caption(governance.summary)
+        for check in governance.checks:
+            mark = "✅" if check.passed else "❌"
+            st.write(f"{mark} **{check.name}** — {check.detail}")
+        if manual_hits:
+            st.divider()
+            st.markdown(f"**대응 매뉴얼 Hybrid RAG** (`{manual_hits[0].method}`)")
+            for hit in manual_hits:
+                with st.container(border=True):
+                    st.markdown(f"**{hit.entry.title}** (유사도 `{hit.score:.2f}`)")
+                    st.write(hit.entry.content)
+
